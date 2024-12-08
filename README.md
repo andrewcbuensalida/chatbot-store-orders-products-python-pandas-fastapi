@@ -26,6 +26,10 @@ pip install -r requirements.txt
 ## To save dependencies into requirements.txt
 pip freeze > requirements.txt
 
+## Paired repos
+https://github.com/andrewcbuensalida/chatbot-store-openai-pandas.git
+https://github.com/andrewcbuensalida/chatbot-store-orders-products-python-pandas-fastapi.git
+https://github.com/andrewcbuensalida/react-chatbot-store.git
 
 ## To start app
 Create a .env file like example.env, then fill it in with your own API keys
