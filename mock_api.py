@@ -11,6 +11,11 @@ app = FastAPI(title="E-commerce Dataset API", description="API for querying e-co
 # Clean data (e.g., handle NaN values) at the start
 df.fillna(value="", inplace=True)
 
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 # Endpoint to get all data
 @app.get("/data")
 def get_all_data():
