@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import pandas as pd
+from fastapi.middleware.cors import CORSMiddleware
 
 # Load dataset
 DATASET_PATH = "./Data/Order_Data_Dataset.csv"
@@ -7,6 +8,15 @@ df = pd.read_csv(DATASET_PATH)
 
 # Initialize FastAPI app
 app = FastAPI(title="E-commerce Dataset API", description="API for querying e-commerce sales data")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Adjust this to your needs
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Clean data (e.g., handle NaN values) at the start
 df.fillna(value="", inplace=True)
