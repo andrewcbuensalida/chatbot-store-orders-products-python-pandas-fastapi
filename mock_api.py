@@ -1,10 +1,14 @@
 from fastapi import FastAPI
 import pandas as pd
 from fastapi.middleware.cors import CORSMiddleware
+from fuzzywuzzy import process
+from loguru import logger
 
 # Load dataset
 DATASET_PATH = "./Data/Order_Data_Dataset.csv"
 df = pd.read_csv(DATASET_PATH)
+PRODUCT_PATH = "./Data/Product_Information_Dataset.csv"
+df_product = pd.read_csv(PRODUCT_PATH)
 
 # Initialize FastAPI app
 app = FastAPI(title="E-commerce Dataset API", description="API for querying e-commerce sales data")
@@ -92,3 +96,66 @@ def profit_by_gender():
     """Calculate total profit by customer gender."""
     profit_summary = df.groupby("Gender")["Profit"].sum().reset_index()
     return profit_summary.to_dict(orient="records")
+
+
+# Product Information
+
+def fuzzy_search(df, query, column, limit=10):
+    # Extract the column values as a list
+    choices = df[column].tolist()
+
+    # Perform fuzzy matching
+    results = process.extract(query, choices, limit=limit)
+
+    # Extract the matched rows from the DataFrame
+    matched_indices = [choices.index(result[0]) for result in results]
+    matched_df = df.iloc[matched_indices].copy()
+
+    # Add the score to the matched DataFrame
+    matched_df["score"] = [result[1] for result in results]
+
+    return matched_df
+
+@app.get("/data/search-products")
+def search_products(query: str, sort_column: str = "average_rating", sort_order: str = "desc", limit: int = 5):
+    logger.info(f"Searching for products with query: {query}, sort_column: {sort_column}, sort_order: {sort_order}, limit: {limit}")
+    # Perform fuzzy search on multiple columns
+    columns_to_search = [
+        "title",
+        "description",
+        "main_category",
+        "features",
+        "categories",
+        "details",
+    ]
+    combined_matches = pd.DataFrame()
+
+    for column in columns_to_search:
+        matches = fuzzy_search(
+            df_product, query, column, limit=1000000000
+        )  # a large number to get all matches
+        combined_matches = pd.concat([combined_matches, matches]).drop_duplicates()
+
+    # Sort the combined matches by score in descending order
+    combined_matches = combined_matches.sort_values(by="score", ascending=False)
+
+    # Limit the results
+    combined_matches = combined_matches.head(limit)
+
+    # Sort the combined matches based on the specified column and order
+    top_results = combined_matches.sort_values(
+        by=sort_column, ascending=(sort_order == "asc")
+    )
+    # Fill NaN values to avoid JSON serialization issues
+    top_results = top_results.fillna("")
+
+    return top_results.to_dict(orient="records")
+
+
+# Endpoint to get unique column names
+@app.get("/data/product-columns")
+def get_product_columns():
+    """Retrieve column names in the products dataset."""
+    logger.info("Retrieving column names in the products dataset")
+    product_columns = df_product.columns.tolist()
+    return {"product_columns": product_columns}

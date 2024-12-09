@@ -37,7 +37,7 @@ Create a .env file like example.env, then fill it in with your own API keys
 After activating virtual environment and installing packages 
 `cd Mock_Api`
 
-To start the orders server
+To start the orders/products server
 `uvicorn mock_api:app --reload --port 8001`
 
 To start the OpenAI server
