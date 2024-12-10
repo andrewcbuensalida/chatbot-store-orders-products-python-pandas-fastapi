@@ -34,7 +34,7 @@ Pygments==2.18.0
 python-dateutil==2.9.0.post0
 python-Levenshtein==0.26.1
 pytz==2024.2
-# pywin32==308 # need to comment this out to install on linux
+# pywin32==308 # need to comment this out to install on linux heroku
 pyzmq==26.2.0
 RapidFuzz==3.10.1
 six==1.17.0
