@@ -132,20 +132,16 @@ def search_products(query: str, sort_column: str = "average_rating", sort_order:
 
     for column in columns_to_search:
         matches = fuzzy_search(
-            df_product, query, column, limit=1000000000
+            df_product, query, column, limit=100000000
         )  # a large number to get all matches
-        combined_matches = pd.concat([combined_matches, matches]).drop_duplicates()
-
-    # Sort the combined matches by score in descending order
-    combined_matches = combined_matches.sort_values(by="score", ascending=False)
-
+        # keep the highest score if there are duplicates, because fuzzy searching on one column can have a different score than another column
+        combined_matches = pd.concat([combined_matches, matches]).sort_values(by='score',ascending=False).drop_duplicates(subset=['title'], keep='first')
+    
     # Limit the results
     combined_matches = combined_matches.head(limit)
 
     # Sort the combined matches based on the specified column and order
-    top_results = combined_matches.sort_values(
-        by=sort_column, ascending=(sort_order == "asc")
-    )
+    top_results = combined_matches.sort_values(by=sort_column, ascending=(sort_order == "asc"))
     # Fill NaN values to avoid JSON serialization issues
     top_results = top_results.fillna("")
 
