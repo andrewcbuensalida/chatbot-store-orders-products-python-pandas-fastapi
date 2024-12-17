@@ -123,10 +123,10 @@ def search_products(query: str, sort_column: str = "average_rating", sort_order:
     columns_to_search = [
         "title",
         "description",
-        "main_category",
-        "features",
-        "categories",
-        "details",
+        # "main_category",
+        # "features",
+        # "categories",
+        # "details",
     ]
     combined_matches = pd.DataFrame()
 
