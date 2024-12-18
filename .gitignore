@@ -3,3 +3,6 @@
 log
 __pycache__
 messages.csv
+Product_Information_Dataset_with_embeddings.csv
+search_results_embeddings.csv
+search_results.csv

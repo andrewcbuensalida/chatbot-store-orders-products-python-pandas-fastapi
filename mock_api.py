@@ -3,12 +3,28 @@ import pandas as pd
 from fastapi.middleware.cors import CORSMiddleware
 from fuzzywuzzy import process
 from loguru import logger
+from ast import literal_eval
+import numpy as np
+from embedding import search_embeddings
+import boto3
 
-# Load dataset
+
+# Load Orders dataset
 DATASET_PATH = "./Data/Order_Data_Dataset.csv"
 df = pd.read_csv(DATASET_PATH)
-PRODUCT_PATH = "./Data/Product_Information_Dataset.csv"
+
+# Load Product Information dataset
+s3 = boto3.client("s3")
+def download_file_from_s3(bucket_name, object_name, file_name):
+    s3.download_file(bucket_name, object_name, file_name)
+bucket_name = "chatbot-store-genailabs"
+object_name = "Product_Information_Dataset_with_embeddings.csv"
+file_name = "Data/Product_Information_Dataset_with_embeddings.csv"  # local file name
+download_file_from_s3(bucket_name, object_name, file_name)
+PRODUCT_PATH = "./Data/Product_Information_Dataset_with_embeddings.csv"
 df_product = pd.read_csv(PRODUCT_PATH)
+df_product["embedding"] = df_product.embedding.apply(literal_eval).apply(np.array)
+
 
 # Initialize FastAPI app
 app = FastAPI(title="E-commerce Dataset API", description="API for querying e-commerce sales data")
@@ -100,6 +116,26 @@ def profit_by_gender():
 
 # Product Information
 
+# Endpoint to search for products based on a query
+@app.get("/data/search-products")
+def search_products_embedding(query: str, sort_column: str = "average_rating", sort_order: str = "desc", limit: int = 5):
+    logger.info(
+        f"Searching for products with query: {query}, sort_column: {sort_column}, sort_order: {sort_order}, limit: {limit}"
+    )
+    result = search_embeddings(df_product, query, n=10000000)
+
+    # Limit the results
+    result = result.head(limit)
+
+    # Sort the results based on the specified column and order
+    result.sort_values(by=sort_column, ascending=(sort_order == "asc"), inplace=True)
+
+    # Fill NaN values to avoid JSON serialization issues
+    result = result.fillna("")
+    
+    return result.to_dict(orient="records")
+
+
 def fuzzy_search(df, query, column, limit=10):
     # Extract the column values as a list
     choices = df[column].tolist()
@@ -116,8 +152,9 @@ def fuzzy_search(df, query, column, limit=10):
 
     return matched_df
 
-@app.get("/data/search-products")
-def search_products(query: str, sort_column: str = "average_rating", sort_order: str = "desc", limit: int = 5):
+# Deprecated. Use /data/search-products instead.
+@app.get("/data/search-products-fuzzy")
+def search_products_fuzzy(query: str, sort_column: str = "average_rating", sort_order: str = "desc", limit: int = 5):
     logger.info(f"Searching for products with query: {query}, sort_column: {sort_column}, sort_order: {sort_order}, limit: {limit}")
     # Perform fuzzy search on multiple columns
     columns_to_search = [
