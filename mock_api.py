@@ -30,7 +30,7 @@ object_name = "Product_Information_Dataset_with_embeddings.csv"
 PRODUCT_PATH = (
     "./Data/Product_Information_Dataset_with_embeddings.csv"  # local file name
 )
-download_file_from_s3(bucket_name, object_name, PRODUCT_PATH)
+# download_file_from_s3(bucket_name, object_name, PRODUCT_PATH)
 df_product = pd.read_csv(PRODUCT_PATH)
 df_product["embedding"] = df_product.embedding.apply(literal_eval).apply(np.array)
 
