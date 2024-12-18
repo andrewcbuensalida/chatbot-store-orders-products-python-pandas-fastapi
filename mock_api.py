@@ -9,6 +9,7 @@ import numpy as np
 from embedding import search_embeddings
 import boto3
 from dotenv import load_dotenv
+import io
 
 load_dotenv()
 
@@ -23,16 +24,22 @@ s3 = boto3.client(
     aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY"),
     region_name="us-west-1",
 )
-def download_file_from_s3(bucket_name, object_name, file_name):
-    s3.download_file(bucket_name, object_name, file_name)
+# def download_file_from_s3(bucket_name, object_name, file_name):
+#     s3.download_file(bucket_name, object_name, file_name)
 bucket_name = "chatbot-store-genailabs"
 object_name = "Product_Information_Dataset_with_embeddings.csv"
-PRODUCT_PATH = (
-    "./Data/Product_Information_Dataset_with_embeddings.csv"  # local file name
-)
-# download_file_from_s3(bucket_name, object_name, PRODUCT_PATH)
-df_product = pd.read_csv(PRODUCT_PATH)
+# PRODUCT_PATH = (
+#     "./Data/Product_Information_Dataset_with_embeddings.csv"  # local file name
+# )
+# # download_file_from_s3(bucket_name, object_name, PRODUCT_PATH)
+# df_product = pd.read_csv(PRODUCT_PATH)
+def read_csv_from_s3(bucket_name, object_name):
+  response = s3.get_object(Bucket=bucket_name, Key=object_name)
+  return pd.read_csv(io.BytesIO(response['Body'].read()))
+
+df_product = read_csv_from_s3(bucket_name, object_name)
 df_product["embedding"] = df_product.embedding.apply(literal_eval).apply(np.array)
+print('''*Example df_product:\n''', df_product)
 
 
 # Initialize FastAPI app
