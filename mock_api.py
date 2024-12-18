@@ -19,7 +19,7 @@ def download_file_from_s3(bucket_name, object_name, file_name):
     s3.download_file(bucket_name, object_name, file_name)
 bucket_name = "chatbot-store-genailabs"
 object_name = "Product_Information_Dataset_with_embeddings.csv"
-file_name = "Data/Product_Information_Dataset_with_embeddings.csv"  # local file name
+file_name = "./Data/Product_Information_Dataset_with_embeddings.csv"  # local file name
 download_file_from_s3(bucket_name, object_name, file_name)
 PRODUCT_PATH = "./Data/Product_Information_Dataset_with_embeddings.csv"
 df_product = pd.read_csv(PRODUCT_PATH)
