@@ -221,8 +221,8 @@ def search_products_fuzzy(
             .drop_duplicates(subset=["title"], keep="first")
         )
 
-    # Limit the results
-    combined_matches = combined_matches.head(limit)
+    # Limit the results. Always return 20 to llm and let llm decide how many to show
+    combined_matches = combined_matches.head(20)
 
     # Sort the combined matches based on the specified column and order
     top_results = combined_matches.sort_values(
