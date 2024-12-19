@@ -159,6 +159,9 @@ def search_products_pinecone(
     # hardcoded top_k=10 and just let llm decide how many to show
     result = search_pinecone(query, top_k=10)
 
+    # Convert the price column to numeric, setting errors='coerce' to replace non-numeric values with NaN. Or else it will error with TypeError: '<' not supported between instances of 'str' and 'float'
+    result["price"] = pd.to_numeric(result["price"], errors="coerce")
+
     # Sort the DataFrame based on the specified column and order
     result = result.sort_values(by=sort_column, ascending=(sort_order == "asc"))
 
