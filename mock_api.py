@@ -6,7 +6,7 @@ from fuzzywuzzy import process
 from loguru import logger
 from ast import literal_eval
 import numpy as np
-from embedding import search_embeddings
+from embedding import search_embeddings, search_pinecone
 import boto3
 from dotenv import load_dotenv
 import io
@@ -145,8 +145,32 @@ def profit_by_gender():
 
 # Product Information
 
+@app.get("/data/search-products")
+def search_products_pinecone(
+    query: str,
+    sort_column: str = "average_rating",
+    sort_order: str = "desc",
+    limit: int = 5,
+):
+    logger.info(
+        f"Searching for products with query: {query}, sort_column: {sort_column}, sort_order: {sort_order}, limit: {limit}"
+    )
 
-# Endpoint to search for products based on a query
+    # hardcoded top_k=10 and just let llm decide how many to show
+    result = search_pinecone(query, top_k=10)
+
+    # Sort the DataFrame based on the specified column and order
+    result = result.sort_values(by=sort_column, ascending=(sort_order == "asc"))
+
+    # Limit the results. hardcoded and just let llm decide how many to show
+    result = result.head(10)
+
+    # Fill NaN values to avoid JSON serialization issues
+    result = result.fillna("")
+
+    return result.to_dict(orient="records")
+
+# Deprecated. Use /data/search-products instead.
 @app.get("/data/search-products-embedding")
 def search_products_embedding(
     query: str,
@@ -189,7 +213,7 @@ def fuzzy_search(df, query, column, limit=10):
 
 
 # Deprecated. Use /data/search-products instead.
-@app.get("/data/search-products")
+@app.get("/data/search-products-fuzzy")
 def search_products_fuzzy(
     query: str,
     sort_column: str = "average_rating",
